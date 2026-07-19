@@ -5,7 +5,7 @@ const STATIC_ASSETS = Object.freeze({
   summary: "./data/summary.json",
 });
 
-const simulatorWorker = new Worker("./simulator-worker.js");
+const simulatorWorker = new Worker("./simulator-worker.js?v=20260720-2", { type: "module" });
 const workerRequests = new Map();
 let workerRequestSequence = 0;
 

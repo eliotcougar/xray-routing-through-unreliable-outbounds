@@ -143,9 +143,13 @@ class WebAppTests(unittest.TestCase):
         self.assertIn('./data/catalog.json', app)
         self.assertIn('./data/summary.json', app)
         self.assertIn('simulateInBrowser(request, controller.signal)', app)
+        self.assertIn('new Worker("./simulator-worker.js?v=20260720-2", { type: "module" })', app)
         self.assertNotIn('/api/simulate', app)
-        self.assertIn('const PYODIDE_VERSION = "v314.0.2"', worker)
-        self.assertIn('cdn.jsdelivr.net/pyodide/', worker)
+        self.assertIn('import { loadPyodide } from "./pyodide/pyodide.mjs"', worker)
+        self.assertIn('const PYODIDE_VERSION = "314.0.2"', worker)
+        self.assertIn('new URL("./pyodide/", self.location.href)', worker)
+        self.assertNotIn('cdn.jsdelivr.net', worker)
+        self.assertNotIn('importScripts', worker)
         self.assertIn('simulation_payload', worker)
 
     def test_simulation_rejects_outbound_count_outside_ui_range(self) -> None:

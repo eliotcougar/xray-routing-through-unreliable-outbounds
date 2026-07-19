@@ -1,7 +1,9 @@
 "use strict";
 
-const PYODIDE_VERSION = "v314.0.2";
-const PYODIDE_BASE = `https://cdn.jsdelivr.net/pyodide/${PYODIDE_VERSION}/full/`;
+import { loadPyodide } from "./pyodide/pyodide.mjs";
+
+const PYODIDE_VERSION = "314.0.2";
+const PYODIDE_BASE = new URL("./pyodide/", self.location.href).href;
 const MODULES = [
   "__init__.py",
   "model.py",
@@ -18,8 +20,7 @@ function publishStatus(message) {
 }
 
 async function loadRuntime() {
-  publishStatus("Downloading the in-browser Python runtime. This happens once per page load.");
-  importScripts(`${PYODIDE_BASE}pyodide.js`);
+  publishStatus(`Loading self-hosted Pyodide ${PYODIDE_VERSION}. This happens once per page load.`);
   const pyodide = await loadPyodide({ indexURL: PYODIDE_BASE });
 
   publishStatus("Loading the Xray simulation model into the browser worker.");

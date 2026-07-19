@@ -80,7 +80,7 @@ Every result directory includes:
 
 ## Interactive Route Lab
 
-The published Route Lab is static: simulation runs locally in a browser Web Worker through Pyodide, while the Monte Carlo comparison table is loaded from the tracked dataset. No simulated or real network traffic is sent to Xray outbounds.
+The published Route Lab is static: simulation runs locally in a browser Web Worker through a same-origin, self-hosted Pyodide runtime, while the Monte Carlo comparison table is loaded from the tracked dataset. No simulated or real network traffic is sent to Xray outbounds.
 
 To preview the exact Pages artifact locally:
 
