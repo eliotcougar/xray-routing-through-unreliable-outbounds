@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="#071110">
+    <title>Xray Route Lab</title>
+    <meta
+      name="description"
+      content="Explore simulated Xray outbound reliability and balancer behavior over time."
+    >
+    <link rel="stylesheet" href="./styles.css?v=20260719-2">
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="masthead">
+        <a class="brand" href="./" aria-label="Xray Route Lab home">
+          <span class="brand-mark" aria-hidden="true">XR</span>
+          <span>
+            <strong>Route Lab</strong>
+            <small>Xray balancer simulator</small>
+          </span>
+        </a>
+        <div class="masthead-meta">
+          <span class="live-dot" aria-hidden="true"></span>
+          <span id="run-status">Loading browser simulator</span>
+          <span class="divider" aria-hidden="true"></span>
+          <span id="duration-label">30 minute trace</span>
+        </div>
+      </header>
+
+      <main>
+        <section class="hero" aria-labelledby="page-title">
+          <div>
+            <p class="eyebrow">Reliability workbench / numerical simulation</p>
+            <h1 id="page-title">See what the balancer sees.</h1>
+            <p class="hero-copy">
+              Put Xray routing strategies against unstable outbound pools. Inspect every
+              outage, probe decision, route switch, and user-visible delay across the same
+              deterministic 30-minute world.
+            </p>
+          </div>
+          <div class="hero-index" aria-label="How to use this dashboard">
+            <span>01</span>
+            <p>Choose a world and strategy preset</p>
+            <span>02</span>
+            <p>Run one reproducible trace</p>
+            <span>03</span>
+            <p>Compare it with the Monte Carlo baseline</p>
+          </div>
+        </section>
+
+        <section class="control-deck" aria-labelledby="controls-title">
+          <div class="section-heading compact-heading">
+            <div>
+              <p class="section-kicker">Simulation controls</p>
+              <h2 id="controls-title">Build a run</h2>
+            </div>
+            <span class="keyboard-hint">Enter to simulate</span>
+          </div>
+
+          <form id="simulation-form" class="controls" novalidate>
+            <label class="field field--wide">
+              <span>Outbound scenario</span>
+              <select id="scenario-select" name="scenario" disabled>
+                <option>Loading scenarios…</option>
+              </select>
+            </label>
+
+            <label class="field field--count">
+              <span>Outbounds</span>
+              <span class="number-control">
+                <button id="count-down" type="button" aria-label="Remove one outbound" disabled>−</button>
+                <input id="outbound-count" name="outbounds" type="number" min="5" max="20" value="12" inputmode="numeric" disabled>
+                <button id="count-up" type="button" aria-label="Add one outbound" disabled>+</button>
+              </span>
+            </label>
+
+            <label class="field field--seed">
+              <span>World seed</span>
+              <span class="seed-control">
+                <input id="seed-input" name="seed" type="number" value="20260719" inputmode="numeric" disabled>
+                <button id="randomize-seed" class="icon-button" type="button" aria-label="Generate a random seed" title="Generate a random seed" disabled>↻</button>
+              </span>
+            </label>
+
+            <label class="field field--wide">
+              <span>Strategy &amp; observatory preset</span>
+              <select id="strategy-select" name="strategy" disabled>
+                <option>Loading strategies…</option>
+              </select>
+            </label>
+
+            <button id="simulate-button" class="run-button" type="submit" disabled>
+              <span class="run-button-label">Run simulation</span>
+              <span class="run-button-arrow" aria-hidden="true">→</span>
+              <span class="button-spinner" aria-hidden="true"></span>
+            </button>
+          </form>
+
+          <div class="selection-notes">
+            <div>
+              <span class="note-label">Scenario</span>
+              <p id="scenario-description">Waiting for the simulation catalog.</p>
+            </div>
+            <div>
+              <span class="note-label">Preset settings</span>
+              <div id="strategy-settings" class="setting-chips" aria-live="polite"></div>
+            </div>
+          </div>
+
+          <div id="catalog-error" class="notice notice--error" role="alert" hidden>
+            <div>
+              <strong>Could not load the simulator catalog.</strong>
+              <p id="catalog-error-message">Reload the published site and retry.</p>
+            </div>
+            <button id="retry-catalog" type="button">Retry</button>
+          </div>
+        </section>
+
+        <section id="results" class="results" aria-labelledby="results-title" aria-busy="true">
+          <div class="section-heading results-heading">
+            <div>
+              <p class="section-kicker">Current run</p>
+              <h2 id="results-title">Connection quality</h2>
+            </div>
+            <div class="run-identity">
+              <span id="result-scenario">—</span>
+              <span aria-hidden="true">/</span>
+              <span id="result-strategy">—</span>
+              <span aria-hidden="true">/</span>
+              <span id="result-seed">seed —</span>
+            </div>
+          </div>
+
+          <div id="simulation-error" class="notice notice--error notice--floating" role="alert" hidden>
+            <div>
+              <strong>That simulation did not finish.</strong>
+              <p id="simulation-error-message">The previous result is still shown below.</p>
+            </div>
+            <button id="retry-simulation" type="button">Try again</button>
+          </div>
+
+          <div id="loading-panel" class="loading-panel">
+            <div class="loading-scan" aria-hidden="true"></div>
+            <div>
+              <strong id="loading-title">Preparing the first simulation</strong>
+              <p id="loading-copy">Loading the published catalog and in-browser Python runtime.</p>
+            </div>
+          </div>
+
+          <div id="result-content" hidden>
+            <div class="metric-grid" aria-label="Simulation headline metrics">
+              <article class="metric-card metric-card--primary">
+                <span class="metric-label">Availability</span>
+                <strong id="metric-availability">—</strong>
+                <span id="metric-availability-note" class="metric-note">successful attempts</span>
+              </article>
+              <article class="metric-card">
+                <span class="metric-label">Effective response</span>
+                <strong id="metric-effective">—</strong>
+                <span class="metric-note">failures include timeout cost</span>
+              </article>
+              <article class="metric-card">
+                <span class="metric-label">Successful p95</span>
+                <strong id="metric-p95">—</strong>
+                <span class="metric-note">latency when connected</span>
+              </article>
+              <article class="metric-card">
+                <span class="metric-label">Longest outage</span>
+                <strong id="metric-outage">—</strong>
+                <span class="metric-note">consecutive failed attempts</span>
+              </article>
+              <article class="metric-card">
+                <span class="metric-label">Route switches</span>
+                <strong id="metric-switches">—</strong>
+                <span class="metric-note">across this run</span>
+              </article>
+            </div>
+
+            <div class="chart-grid">
+              <article class="panel panel--span-2">
+                <div class="panel-heading">
+                  <div>
+                    <span class="panel-index">A / pool ground truth</span>
+                    <h3>Outbound latency &amp; availability</h3>
+                    <p>Each row is one outbound. Dark red means unavailable; the cyan trace is the route selected for each attempt.</p>
+                  </div>
+                  <div class="heat-legend" aria-label="Latency color scale">
+                    <span>fast</span><i aria-hidden="true"></i><span>slow</span><b aria-hidden="true"></b><span>down</span>
+                    <span class="route-legend"><i aria-hidden="true"></i>selected route</span>
+                  </div>
+                </div>
+                <div class="chart-frame chart-frame--matrix">
+                  <canvas id="outbound-matrix" role="img" aria-label="Outbound availability and latency heatmap with selected route overlay"></canvas>
+                  <div class="chart-tooltip" role="status" hidden></div>
+                </div>
+                <p class="chart-help">Select a row to inspect that outbound below.</p>
+              </article>
+
+              <article class="panel">
+                <div class="panel-heading">
+                  <div>
+                    <span class="panel-index">B / selected outbound</span>
+                    <h3 id="outbound-detail-title">Outbound detail</h3>
+                    <p id="outbound-detail-copy">Latency and rolling 60-second availability.</p>
+                  </div>
+                  <span id="outbound-profile-badge" class="profile-badge">—</span>
+                </div>
+                <div class="chart-frame chart-frame--standard">
+                  <canvas id="outbound-detail" role="img" aria-label="Selected outbound latency and rolling availability"></canvas>
+                  <div class="chart-tooltip" role="status" hidden></div>
+                </div>
+                <div class="chart-legend">
+                  <span><i class="legend-line legend-line--latency"></i>latency</span>
+                  <span><i class="legend-line legend-line--availability"></i>60 s availability</span>
+                  <span><i class="legend-block legend-block--failure"></i>failed</span>
+                </div>
+              </article>
+
+              <article class="panel">
+                <div class="panel-heading">
+                  <div>
+                    <span class="panel-index">C / routed response</span>
+                    <h3>User-visible response</h3>
+                    <p>Observed latency with a rolling effective response that prices in failed attempts.</p>
+                  </div>
+                </div>
+                <div class="chart-frame chart-frame--standard">
+                  <canvas id="response-chart" role="img" aria-label="Routed response latency over time"></canvas>
+                  <div class="chart-tooltip" role="status" hidden></div>
+                </div>
+                <div class="chart-legend">
+                  <span><i class="legend-line legend-line--latency"></i>successful latency</span>
+                  <span><i class="legend-line legend-line--effective"></i>60 s effective</span>
+                </div>
+              </article>
+
+              <article class="panel panel--span-2">
+                <div class="panel-heading">
+                  <div>
+                    <span class="panel-index">D / routed availability</span>
+                    <h3>Connection continuity</h3>
+                    <p>Rolling success rate exposes recovery time after the selected route becomes unhealthy.</p>
+                  </div>
+                  <span id="availability-window" class="profile-badge">60 s window</span>
+                </div>
+                <div class="chart-frame chart-frame--availability">
+                  <canvas id="availability-chart" role="img" aria-label="Routed rolling availability over time"></canvas>
+                  <div class="chart-tooltip" role="status" hidden></div>
+                </div>
+                <div class="chart-legend">
+                  <span><i class="legend-line legend-line--availability"></i>rolling availability</span>
+                  <span><i class="legend-block legend-block--failure"></i>individual failures</span>
+                  <span><i class="legend-line legend-line--target"></i>99% reference</span>
+                </div>
+              </article>
+            </div>
+
+            <article class="comparison-panel" aria-labelledby="comparison-title">
+              <div class="panel-heading comparison-heading">
+                <div>
+                  <span class="panel-index">Monte Carlo context</span>
+                  <h3 id="comparison-title">How this preset usually performs</h3>
+                  <p id="comparison-copy">Aggregate results across generated worlds.</p>
+                </div>
+                <div class="comparison-context">
+                  <label for="summary-scope">Conditions</label>
+                  <select id="summary-scope" name="summary-scope" disabled>
+                    <option>Loading scenarios…</option>
+                  </select>
+                  <span id="summary-status" class="summary-status">Loading reference…</span>
+                </div>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th scope="col" aria-sort="none"><button type="button" class="summary-sort" data-summary-sort="strategyLabel">Strategy preset <span aria-hidden="true" class="summary-sort-marker">↕</span></button></th>
+                      <th scope="col" aria-sort="none"><button type="button" class="summary-sort" data-summary-sort="availabilityPct">Availability <span aria-hidden="true" class="summary-sort-marker">↕</span></button></th>
+                      <th scope="col" aria-sort="ascending"><button type="button" class="summary-sort" data-summary-sort="effectiveMs">Effective response <span aria-hidden="true" class="summary-sort-marker">↑</span></button></th>
+                      <th scope="col" aria-sort="none"><button type="button" class="summary-sort" data-summary-sort="p95Ms">Successful p95 <span aria-hidden="true" class="summary-sort-marker">↕</span></button></th>
+                      <th scope="col" aria-sort="none"><button type="button" class="summary-sort" data-summary-sort="maxOutageS">Mean max outage <span aria-hidden="true" class="summary-sort-marker">↕</span></button></th>
+                      <th scope="col" aria-sort="none"><button type="button" class="summary-sort" data-summary-sort="worstOutageS">Worst observed outage <span aria-hidden="true" class="summary-sort-marker">↕</span></button></th>
+                    </tr>
+                  </thead>
+                  <tbody id="summary-table-body">
+                    <tr><td colspan="6">Reference statistics are loading.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </article>
+          </div>
+        </section>
+      </main>
+
+      <footer>
+        <span>Xray Route Lab</span>
+        <p>Numerical traces only — no network traffic is generated.</p>
+        <span><a href="./xray-unreliable-routing.pdf">Whitepaper</a> · <a href="https://github.com/XTLS/Xray-core" target="_blank" rel="noreferrer">Xray-core source ↗</a></span>
+      </footer>
+    </div>
+
+    <noscript>
+      <div class="noscript">This explorer needs JavaScript to run and draw simulation traces in your browser.</div>
+    </noscript>
+    <script src="./app.js?v=20260720-1" defer></script>
+  </body>
+</html>

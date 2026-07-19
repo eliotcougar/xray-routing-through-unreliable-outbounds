@@ -1,0 +1,2 @@
+scenario_key,strategy_key,strategy,trials,max_outage_mean_s,max_outage_max_s,effective_rank
+hostile_internet,leastload_default_60s,leastLoad default,50,91.5,774,1

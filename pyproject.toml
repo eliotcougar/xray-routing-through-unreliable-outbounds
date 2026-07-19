@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=70"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xray-strategy-sim"
+version = "0.1.0"
+description = "Numerical Monte Carlo simulator for Xray outbound balancer strategies"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = ["matplotlib>=3.9,<4"]
+
+[project.urls]
+Homepage = "https://eliotcougar.github.io/xray-routing-through-unreliable-outbounds/"
+Repository = "https://github.com/eliotcougar/xray-routing-through-unreliable-outbounds"
+Whitepaper = "https://eliotcougar.github.io/xray-routing-through-unreliable-outbounds/xray-unreliable-routing.pdf"
+
+[project.scripts]
+xray-strategy-sim = "xray_strategy_sim.cli:main"
+xray-route-lab = "xray_strategy_sim.webapp:main"
+
+[tool.setuptools.packages.find]
+include = ["xray_strategy_sim*"]
