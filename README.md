@@ -1,3 +1,5 @@
+![Exact leastLoad failure: a selected outbound remains preferred after becoming unavailable](docs/figures/case_exact_leastload.png)
+
 # Xray routing through unreliable outbounds
 
 This repository numerically evaluates Xray balancer strategies against realistic, time-correlated outbound failures. It generates pools of 5–20 synthetic outbounds, routes one connection attempt per second for 30 minutes, and compares availability, response time, outage length, and route churn over matched Monte Carlo worlds.
@@ -90,8 +92,6 @@ To preview the exact Pages artifact locally:
 ```
 
 Then open `http://127.0.0.1:8765/`. The first interactive run downloads the browser Python runtime; subsequent runs reuse it for that page session.
-
-GitHub Actions deploys `build/pages` on pushes to `main`. In a new repository, select **GitHub Actions** as the Pages source once under **Settings → Pages**.
 
 ## Tests
 
