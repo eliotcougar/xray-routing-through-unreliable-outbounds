@@ -6,7 +6,6 @@ This repository numerically evaluates Xray balancer strategies against realistic
 
 - [Open the interactive Route Lab](https://eliotcougar.github.io/xray-routing-through-unreliable-outbounds/)
 - [Read the whitepaper (PDF)](https://eliotcougar.github.io/xray-routing-through-unreliable-outbounds/xray-unreliable-routing.pdf)
-- [Download the repository copy](docs/xray-unreliable-routing.pdf)
 
 The current reference dataset contains 400 independent worlds: 50 for each of eight scenarios. All 31 strategy presets run against every world, producing 12,400 matched strategy-world results and 22.32 million one-second route decisions. The scenarios cover mostly healthy fleets, latency ladders, fast-but-flaky paths, shared-provider incidents, congestion waves, rolling degradation, hostile networks, and a broad mixed fleet.
 
